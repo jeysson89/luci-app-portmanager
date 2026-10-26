@@ -1,0 +1,12 @@
+# artifacts
+dist/
+*.apk
+
+# python
+__pycache__/
+*.pyc
+
+# editor / system junk
+Thumbs.db
+.DS_Store
+*.log

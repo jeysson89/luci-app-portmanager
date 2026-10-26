@@ -1,0 +1,14 @@
+# normalise line endings
+* text=auto
+
+# these files must stay LF (they run / are uploaded to the router as-is)
+*.sh text eol=lf
+Makefile text eol=lf
+.gitignore text eol=lf
+files/usr/share/rpcd/ucode/portmanager text eol=lf
+files/www/** text eol=lf
+files/usr/share/luci/**/*.json text eol=lf
+files/usr/share/rpcd/acl.d/*.json text eol=lf
+
+# binary artifacts
+*.apk binary
