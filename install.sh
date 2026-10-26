@@ -11,6 +11,7 @@
 
 REPO="jeysson89/luci-app-portmanager"
 VER="1.0.0-r1"
+TAG="v1.0.0"
 PKG_NAME="luci-app-portmanager"
 
 msg()   { printf '\033[32m[+]\033[0m %s\n' "$1"; }
@@ -34,7 +35,7 @@ if [ -n "$1" ] && [ -f "$1" ]; then
 	msg "Использую локальный пакет: $PKG"
 else
 	PKG="/tmp/${PKG_NAME}-${VER}.apk"
-	URL="https://github.com/${REPO}/releases/download/v${VER}/${PKG_NAME}-${VER}.apk"
+	URL="https://github.com/${REPO}/releases/download/${TAG}/${PKG_NAME}-${VER}.apk"
 	msg "Скачиваю $URL"
 	wget -qO "$PKG" "$URL" || curl -sL -o "$PKG" "$URL" || fail "Не удалось скачать пакет (укажите путь к .apk аргументом)"
 fi
