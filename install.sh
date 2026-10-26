@@ -48,4 +48,5 @@ rm -f /tmp/luci-indexcache* /tmp/luci-modulecache 2>/dev/null
 
 msg "Готово! Откройте в браузере:"
 LAN_IP=$(uci -q get network.lan.ipaddr || echo 192.168.1.1)
+LAN_IP="${LAN_IP%%/*}"
 echo "   http://${LAN_IP}/cgi-bin/luci/admin/network/portmanager"
