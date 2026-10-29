@@ -46,6 +46,7 @@ rm -f "$OUT"
 	--info "maintainer:luci-app-portmanager contributors" \
 	--info "depends:luci-base rpcd-mod-ucode ip-bridge" \
 	--script "post-install:/tmp/post-install.sh" \
+	--sign /tmp/luci-app-portmanager.rsa \
 	--output "$OUT"
 
 ls -la "$OUT"

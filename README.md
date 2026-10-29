@@ -1,8 +1,14 @@
 # luci-app-portmanager
 
-Управление портами роутера в LuCI на OpenWrt 25.x (rpcd/ucode, без CBI). Интерфейс на русском.
+Управление портами роутера в LuCI (rpcd/ucode, без CBI). Интерфейс на русском.
 
 Универсальное для разного железа: поддерживает netdev/DSA, legacy swconfig и Wi-Fi точки доступа.
+
+| Проверено | Версия | Менеджер пакетов |
+|---|---|---|
+| Cudy TR3000 v1 (MT7981) | OpenWrt 25.12.2 | apk |
+| Xiaomi Mi Router AX3000T (MT7981) | OpenWrt 24.10.4 | opkg |
+| прочее aarch64/mipsel + 23.05/24.10/25.x | — | apk или opkg (формат архива выбирается автоматически) |
 
 ## Что умеет
 
@@ -18,18 +24,25 @@
 
 ## Быстрая установка
 
-На роутере:
+Одной строкой (сам выберет apk/ipk и поставит зависимости):
 
 ```sh
-apk add --allow-untrusted luci-app-portmanager-1.0.0-r1.apk
+wget -qO- https://raw.githubusercontent.com/jeysson89/luci-app-portmanager/main/install.sh | sh
 ```
 
-Либо одной строкой из релиза GitHub:
+Либо вручную:
 
 ```sh
-wget -O /tmp/pm.apk https://github.com/jeysson89/luci-app-portmanager/releases/latest/download/luci-app-portmanager-1.0.0-r1.apk \
-  && apk add --allow-untrusted /tmp/pm.apk
+# OpenWrt 25.x (apk)
+wget -O /tmp/pm.apk https://github.com/jeysson89/luci-app-portmanager/releases/latest/download/luci-app-portmanager-1.0.0-r1.apk
+apk add /tmp/pm.apk
+
+# OpenWrt 23.05 / 24.10 (opkg)
+wget -O /tmp/pm.ipk https://github.com/jeysson89/luci-app-portmanager/releases/latest/download/luci-app-portmanager_1.0.0-r1_all.ipk
+opkg install /tmp/pm.ipk
 ```
+
+Пакет подписан RSA-ключом (публичный ключ в `keys/`), поэтому на apk-системах работает обычный `apk add` и установка через веб-интерфейс LuCI (System → Software → Upload) без `--allow-untrusted`.
 
 После установки откройте в браузере:
 
@@ -52,14 +65,21 @@ http://192.168.1.1/cgi-bin/luci/admin/network/portmanager
 
 ## Сборка пакета (только если нужно пересобрать)
 
-Готовый `luci-app-portmanager-1.0.0-r1.apk` лежит в релизах GitHub. Для пересборки используется сам роутер (`mkpkg` отсутствует в apk 3.0.5, поэтому берётся статический `apk` Alpine):
+В релизах GitHub лежат оба формата: `luci-app-portmanager-1.0.0-r1.apk` (apk-системы, подписан) и `luci-app-portmanager_1.0.0-r1_all.ipk` (opkg-системы).
 
-```powershell
-# из корня репозитория, с копией sh.py рядом (root@192.168.1.1)
-powershell -File dev\build-apk.ps1
+**ipk для OpenWrt 23.05/24.10** — собирается локально, SDK не нужен:
+
+```sh
+python dev\build-ipk.py     # -> dist\luci-app-portmanager_1.0.0-r1_all.ipk
 ```
 
-Скрипт загружает `files/` в `/tmp/pkgroot`, `dev/build-apk.sh` в `/tmp/build-apk.sh`, собирает пакет и сохраняет его в `dist/`.
+**apk для OpenWrt 25.x** — собирается на самом роутере (в apk 3.0.5 нет mkpkg, берётся статический apk Alpine); требуется `sh.py` в корне репо и переменная `ROUTER_PASS`:
+
+```powershell
+ROUTER_PASS=... powershell -File dev\build-apk.ps1
+```
+
+Скрипт загружает `files/` в `/tmp/pkgroot`, ключ подписи `keys/*.rsa` в `/tmp/`, `dev/build-apk.sh` в `/tmp/build-apk.sh`, собирает подписанный пакет и сохраняет его в `dist/`.
 
 Или есть `Makefile` для OpenWrt SDK.
 

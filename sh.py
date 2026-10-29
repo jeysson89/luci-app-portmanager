@@ -1,10 +1,12 @@
 import sys, os, base64, paramiko
 
-HOST = "192.168.1.1"
-USER = "root"
-PASS = "10203040"
+HOST = os.environ.get("ROUTER_HOST", "192.168.1.1")
+USER = os.environ.get("ROUTER_USER", "root")
+PASS = os.environ.get("ROUTER_PASS", "")
 
 def conn():
+    if not PASS:
+        sys.exit("Set ROUTER_PASS environment variable (router root password)")
     c = paramiko.SSHClient()
     c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     c.connect(HOST, username=USER, password=PASS, look_for_keys=False,
@@ -46,11 +48,26 @@ def main():
     elif mode == "put":
         local, remote = sys.argv[2], sys.argv[3]
         with open(local, "rb") as f:
-            data = f.read().decode("utf-8")
-        marker = "__PM_EOF_%s__" % abs(hash(remote))
-        script = "mkdir -p $(dirname '%s')\ncat > '%s' <<'%s'\n%s\n%s\nchmod 0755 '%s'\n" % (
-            remote, remote, marker, data, marker, remote)
-        rc, out, err = run(script)
+            data = f.read()
+        try:
+            text = data.decode("utf-8")
+            marker = "__PM_EOF_%s__" % abs(hash(remote))
+            script = "mkdir -p $(dirname '%s')\ncat > '%s' <<'%s'\n%s\n%s\nchmod 0755 '%s'\n" % (
+                remote, remote, marker, text, marker, remote)
+            rc, out, err = run(script)
+        except UnicodeDecodeError:
+            b64 = base64.b64encode(data).decode()
+            script = "mkdir -p $(dirname '%s')\nbase64 -d %s > '%s'\nchmod 0755 '%s'\n" % (
+                remote, "'%s'" % ("/dev/stdin",), remote, remote)
+            # send base64 through stdin, decode on the router
+            script = "mkdir -p $(dirname '%s')\nbase64 -d > '%s'\nchmod 0755 '%s'\n" % (
+                remote, remote, remote)
+            # re-use the exec channel: put b64 into a temp file then decode
+            import hashlib
+            tmp = "/tmp/.b64_%s" % hashlib.md5(data).hexdigest()[:8]
+            b64script = "cat > '%s' <<'BM64'\n%s\nBM64\nbase64 -d '%s' > '%s' && rm -f '%s'\nchmod 0755 '%s'\n" % (
+                tmp, b64, tmp, remote, tmp, remote)
+            rc, out, err = run(b64script)
         print("uploaded %s -> %s (rc=%d)" % (local, remote, rc))
         if err.strip():
             print(err)

@@ -2,6 +2,9 @@
 dist/
 *.apk
 
+# signing keys (private!)
+keys/*.rsa
+
 # python
 __pycache__/
 *.pyc
